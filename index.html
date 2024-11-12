@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retainly Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #3b82f6;
+            transition: width 1s linear;
+        }
+        .question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+        .option {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #f3f4f6;
+        }
+        .option.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e5e7eb;
+            color: #4b5563;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .badge svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+        }
+        .leaderboard {
+            margin-top: 2rem;
+        }
+        .leaderboard-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .leaderboard-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="card" id="quiz-container">
+        <!-- Quiz content will be dynamically inserted here -->
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "What is the capital of France?",
+                options: ["London", "Berlin", "Paris", "Madrid"],
+                correctAnswer: "Paris",
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Mars", "Jupiter", "Venus", "Saturn"],
+                correctAnswer: "Mars",
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                options: ["Vincent van Gogh", "Leonardo da Vinci", "Pablo Picasso", "Michelangelo"],
+                correctAnswer: "Leonardo da Vinci",
+            },
+            {
+                question: "What is the largest ocean on Earth?",
+                options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+                correctAnswer: "Pacific Ocean",
+            },
+            {
+                question: "Which element has the chemical symbol 'O'?",
+                options: ["Gold", "Oxygen", "Silver", "Iron"],
+                correctAnswer: "Oxygen",
+            },
+        ];
+
+        const badges = [
+            { name: "Perfect Score", icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>', condition: (score) => score === quizData.length },
+            { name: "Speed Demon", icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>', condition: (_, time) => time > 30 },
+            { name: "Sharpshooter", icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>', condition: (score) => score >= quizData.length * 0.8 },
+            { name: "Time Master", icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>', condition: (_, time) => time < 45 },
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 15;
+        let totalTime = 0;
+        let selectedAnswer = "";
+        let userName = "";
+        let leaderboard = [];
+        let timerInterval;
+
+        function renderQuiz() {
+            const quizContainer = document.getElementById('quiz-container');
+            if (userName === "") {
+                quizContainer.innerHTML = `
+                    <h2 class="card-title">Enter Your Name</h2>
+                    <input type="text" id="user-name" class="input" placeholder="Your Name">
+                    <button onclick="startQuiz()" class="button">Start Quiz</button>
+                `;
+            } else if (currentQuestion < quizData.length) {
+                const question = quizData[currentQuestion];
+                quizContainer.innerHTML = `
+                    <h2 class="card-title">Question ${currentQuestion + 1}/${quizData.length}</h2>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: ${(timeLeft / 15) * 100}%"></div>
+                    </div>
+                    <p class="question">${question.question}</p>
+                    <div class="options">
+                        ${question.options.map((option, index) => `
+                            <div class="option" onclick="selectAnswer('${option}')">${option}</div>
+                        `).join('')}
+                    </div>
+                    <div class="footer">
+                        <p>Time left: ${timeLeft}s</p>
+                        <button onclick="nextQuestion()" class="button" id="next-button" disabled>
+                            ${currentQuestion < quizData.length - 1 ? 'Next Question' : 'Finish Quiz'}
+                        </button>
+                    </div>
+                `;
+            } else {
+                const earnedBadges = badges.filter(badge => badge.condition(score, totalTime));
+                quizContainer.innerHTML = `
+                    <h2 class="card-title">Quiz Completed!</h2>
+                    <p>Your score: ${score} out of ${quizData.length}</p>
+                    <div>
+                        ${earnedBadges.map(badge => `
+                            <span class="badge">
+                                ${badge.icon}
+                                ${badge.name}
+                            </span>
+                        `).join('')}
+                    </div>
+                    <button onclick="restartQuiz()" class="button">Restart Quiz</button>
+                    <div class="leaderboard">
+                        <h3 class="leaderboard-title">Leaderboard</h3>
+                        <ul class="leaderboard-list">
+                            ${leaderboard.map((entry, index) => `
+                                <li class="leaderboard-item">
+                                    <span>${index + 1}. ${entry.name}</span>
+                                    <span>${entry.score}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        function startQuiz() {
+            userName = document.getElementById('user-name').value.trim();
+            if (userName !== "") {
+                currentQuestion = 0;
+                score = 0;
+                timeLeft = 15;
+                totalTime = 0;
+                selectedAnswer = "";
+                renderQuiz();
+                startTimer();
+            }
+        }
+
+        function selectAnswer(answer) {
+            selectedAnswer = answer;
+            document.querySelectorAll('.option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.textContent === answer) {
+                    option.classList.add('selected');
+                }
+            });
+            document.getElementById('next-button').disabled = false;
+        }
+
+        function nextQuestion() {
+            if (selectedAnswer === quizData[currentQuestion].correctAnswer) {
+                score++;
+            }
+            currentQuestion++;
+            selectedAnswer = "";
+            timeLeft = 15;
+            if (currentQuestion < quizData.length) {
+                renderQuiz();
+            } else {
+                clearInterval(timerInterval);
+                updateLeaderboard();
+                renderQuiz();
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                totalTime++;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    nextQuestion();
+                } else {
+                    document.querySelector('.progress-bar-fill').style.width = `${(timeLeft / 15) * 100}%`;
+                    document.querySelector('.footer p').textContent = `Time left: ${timeLeft}s`;
+                }
+            }, 1000);
+        }
+
+        function updateLeaderboard() {
+            leaderboard.push({ name: userName, score: score });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+        }
+
+        function restartQuiz() {
+            userName = "";
+            currentQuestion = 0;
+            score = 0;
+            timeLeft = 15;
+            totalTime = 0;
+            selectedAnswer = "";
+            renderQuiz();
+        }
+
+        renderQuiz();
+    </script>
+</body>
+</html>
